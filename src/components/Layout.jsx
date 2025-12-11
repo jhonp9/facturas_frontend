@@ -1,38 +1,15 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShoppingCart, Users, Archive, 
-  FileText, PieChart, LogOut, FileBox, ChevronRight
+  FileText, FileBox, PieChart, LogOut, ChevronRight, User
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-const SidebarItem = ({ icon, text, to }) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-
-  return (
-    <Link to={to} className="block mb-1">
-      <div className={`
-        flex items-center justify-between px-4 py-3 mx-2 rounded-lg transition-all duration-200
-        ${isActive 
-          ? 'bg-blue-600 text-white shadow-md shadow-blue-200' 
-          : 'text-gray-500 hover:bg-gray-50 hover:text-blue-600'
-        }
-      `}>
-        <div className="flex items-center gap-3">
-          {icon}
-          <span className="font-medium text-sm">{text}</span>
-        </div>
-        {/* Pequeña flecha si no está activo, opcional */}
-        {!isActive && <ChevronRight size={14} className="opacity-50" />}
-      </div>
-    </Link>
-  );
-};
-
 const Layout = ({ children, user }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -40,72 +17,94 @@ const Layout = ({ children, user }) => {
     navigate('/login');
   };
 
+  const menuItems = [
+    { to: "/", icon: <LayoutDashboard size={20} />, text: "DASHBOARD" },
+    { to: "/ventas", icon: <FileText size={20} />, text: "VENTAS" },
+    { to: "/clientes", icon: <Users size={20} />, text: "Clientes" },
+    { to: "/compras", icon: <ShoppingCart size={20} />, text: "Compras" },
+    { to: "/inventario", icon: <Archive size={20} />, text: "Inventario" },
+    { to: "/comprobantes", icon: <FileBox size={20} />, text: "Comprobantes avanzados" },
+    { to: "/reportes", icon: <PieChart size={20} />, text: "Reportes" },
+  ];
+
   return (
-    <div className="flex min-h-screen w-full">
-      {/* SIDEBAR FIJO A LA IZQUIERDA */}
-      <aside className="w-64 bg-white shadow-xl fixed h-full z-20 hidden md:flex flex-col">
-        {/* Area del Logo */}
-        <div className="h-20 flex items-center justify-center border-b border-gray-100 p-4">
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+      
+      {/* SIDEBAR */}
+      <aside className="w-72 bg-white border-r border-gray-200 flex flex-col z-20">
+        
+        {/* Logo Area */}
+        <div className="h-24 flex items-center justify-center border-b border-gray-100 p-4">
           {user?.logo ? (
             <img 
-              src={`${API_URL}/uploads/${user.logo}`}
+              src={`${API_URL}/uploads/${user.logo}`} 
               alt="Logo Empresa" 
-              className="h-12 object-contain"
+              className="h-16 object-contain"
             />
           ) : (
-            <h2 className="text-xl font-bold text-blue-600 tracking-tighter">MI NEGOCIO</h2>
+            <h2 className="text-2xl font-bold text-blue-800">MI EMPRESA</h2>
           )}
         </div>
 
-        {/* Menú */}
-        <div className="flex-1 overflow-y-auto py-6">
-          <p className="px-6 text-xs font-bold text-gray-400 uppercase mb-4 tracking-wider">Menu Principal</p>
+        {/* Menu Items */}
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+          <p className="px-4 text-xs font-semibold text-gray-400 uppercase mb-4">Tipo de Menú</p>
           
-          <SidebarItem to="/" icon={<LayoutDashboard size={18} />} text="Dashboard" />
-          <SidebarItem to="/ventas" icon={<FileText size={18} />} text="Ventas" />
-          <SidebarItem to="/clientes" icon={<Users size={18} />} text="Clientes" />
-          <SidebarItem to="/compras" icon={<ShoppingCart size={18} />} text="Compras" />
-          <SidebarItem to="/inventario" icon={<Archive size={18} />} text="Inventario" />
-          <SidebarItem to="/comprobantes" icon={<FileBox size={18} />} text="Comprobantes" />
-          <SidebarItem to="/reportes" icon={<PieChart size={18} />} text="Reportes" />
-        </div>
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.to;
+            return (
+              <Link 
+                key={item.text} 
+                to={item.to}
+                className={`
+                  flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group
+                  ${isActive 
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200' 
+                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  {item.icon}
+                  <span className="font-medium text-sm">{item.text}</span>
+                </div>
+                {!isActive && <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-400" />}
+              </Link>
+            );
+          })}
+        </nav>
 
-        {/* Footer del Sidebar */}
         <div className="p-4 border-t border-gray-100">
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-red-500 text-sm font-medium hover:bg-red-50 w-full p-2 rounded-lg transition-colors"
-          >
-            <LogOut size={16} /> Cerrar Sesión
+          <button onClick={handleLogout} className="flex items-center gap-3 text-red-500 hover:bg-red-50 px-4 py-3 rounded-lg w-full transition-colors font-medium">
+            <LogOut size={20} /> Cerrar Sesión
           </button>
         </div>
       </aside>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         
-        {/* HEADER SUPERIOR */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 sticky top-0 z-10">
-          <h2 className="text-xl font-semibold text-gray-700">Dashboard</h2>
+        {/* HEADER */}
+        <header className="bg-white h-16 border-b border-gray-200 flex items-center justify-between px-8 shadow-sm">
+          <h1 className="text-xl text-gray-700 font-normal">Dashboard</h1>
           
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-gray-800 leading-tight">
-                {user?.nombreUsuario || 'Usuario'}
-              </p>
-              <p className="text-xs text-gray-500 font-medium">
+          <div className="flex items-center gap-3">
+            <div className="text-right leading-tight">
+              <span className="block text-sm font-bold text-gray-700">
+                {user?.nombreUsuario || 'Administrador'}
+              </span>
+              <span className="block text-xs text-gray-500">
                 {user?.email}
-              </p>
+              </span>
             </div>
-            {/* Avatar Círculo */}
-            <div className="h-10 w-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg">
-              {user?.email?.[0]?.toUpperCase() || 'U'}
+            <div className="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+              <User size={20} />
             </div>
           </div>
         </header>
 
-        {/* PÁGINA INTERNA */}
-        <main className="p-6 md:p-10 flex-1 overflow-x-hidden bg-[#f4f6f9]">
+        {/* CONTENIDO SCROLLABLE */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-8">
           {children}
         </main>
       </div>

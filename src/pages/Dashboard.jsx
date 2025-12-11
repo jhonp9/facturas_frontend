@@ -1,94 +1,65 @@
 import React from 'react';
-import { FilePlus, FileText, Receipt, PieChart, DollarSign, ShoppingCart, Package } from 'lucide-react';
+import { FileText, FilePlus, Receipt, PieChart, DollarSign, ShoppingCart, Package } from 'lucide-react';
 
 const Dashboard = () => {
   return (
-    <div className="animate-fade-in-up space-y-8">
+    <div className="max-w-7xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 min-h-[80vh]">
       
-      {/* TARJETA PRINCIPAL BLANCA */}
-      <div className="bg-white rounded-3xl shadow-sm p-8 md:p-12 flex flex-col lg:flex-row gap-10 min-h-[500px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
         
-        {/* SECCIÓN IZQUIERDA: SALUDO */}
-        <div className="lg:w-1/3 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-gray-100 pb-8 lg:pb-0 lg:pr-8">
-          <h1 className="text-6xl font-extrabold text-slate-700 mb-4 tracking-tight">
-            Hola
-          </h1>
-          <p className="text-slate-400 text-xl font-medium">
-            ¿Qué deseas hacer hoy?
-          </p>
+        {/* COLUMNA IZQUIERDA: SALUDO */}
+        <div className="lg:col-span-4 flex flex-col justify-center">
+          <h1 className="text-5xl font-bold text-slate-600 mb-2">Hola</h1>
+          <p className="text-xl text-blue-500 font-medium">¿Qué deseas hacer hoy?</p>
         </div>
 
-        {/* SECCIÓN DERECHA: BOTONES DE ACCIÓN */}
-        <div className="lg:w-2/3 flex flex-col justify-center gap-10">
+        {/* COLUMNA DERECHA: ACCIONES */}
+        <div className="lg:col-span-8 flex flex-col justify-between gap-10">
           
-          {/* GRUPO 1: FACTURACIÓN (ROJO) */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-1 bg-red-500 rounded-full"></div>
-              <h3 className="text-slate-700 font-bold text-lg">Facturación</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <ActionButton 
-                color="bg-[#dc3545] hover:bg-red-700" 
-                icon={<FilePlus size={32} />} 
-                title="Nuevo CPE" 
-                subtitle="Factura / Boleta"
-              />
-              <ActionButton 
-                color="bg-[#dc3545] hover:bg-red-700" 
-                icon={<Receipt size={32} />} 
-                title="Nueva nota" 
-                subtitle="De venta"
-              />
-              <ActionButton 
-                color="bg-[#dc3545] hover:bg-red-700" 
-                icon={<FileText size={32} />} 
-                title="Nueva cotización" 
-                subtitle="Proforma"
-              />
+          {/* SECCIÓN FACTURACIÓN (ROJO) */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider border-b pb-2">Facturación</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <BigCard color="bg-red-500 hover:bg-red-600" icon={<FilePlus size={28}/>} title="Nuevo CPE" subtitle="Factura / Boleta" />
+              <BigCard color="bg-red-500 hover:bg-red-600" icon={<Receipt size={28}/>} title="Nueva nota" subtitle="De venta" />
+              <BigCard color="bg-red-500 hover:bg-red-600" icon={<FileText size={28}/>} title="Nueva cotización" subtitle="Proforma" />
             </div>
           </div>
 
-          <div className="border-t border-gray-50"></div>
+          {/* ESPACIO VACÍO PARA BALANCE VISUAL (O GRÁFICOS FUTUROS) */}
+          <div className="flex-grow border-t border-dashed border-gray-200 my-4"></div>
 
-          {/* GRUPO 2: REPORTES (VERDE) */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-1 bg-green-500 rounded-full"></div>
-              <h3 className="text-slate-700 font-bold text-lg">Reportes</h3>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <ReportButton color="bg-[#28a745] hover:bg-green-700" icon={<PieChart size={24} />} text="Contable" />
-              <ReportButton color="bg-[#28a745] hover:bg-green-700" icon={<DollarSign size={24} />} text="Ventas" />
-              <ReportButton color="bg-[#28a745] hover:bg-green-700" icon={<ShoppingCart size={24} />} text="Compras" />
-              <ReportButton color="bg-[#28a745] hover:bg-green-700" icon={<Package size={24} />} text="Productos" />
+          {/* SECCIÓN REPORTES (VERDE) */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider border-b pb-2">Reportes</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <SmallCard color="bg-green-600 hover:bg-green-700" icon={<PieChart size={24}/>} title="Reporte contable" />
+              <SmallCard color="bg-green-600 hover:bg-green-700" icon={<DollarSign size={24}/>} title="Reporte de ventas" />
+              <SmallCard color="bg-green-600 hover:bg-green-700" icon={<ShoppingCart size={24}/>} title="Reporte de compras" />
+              <SmallCard color="bg-green-600 hover:bg-green-700" icon={<Package size={24}/>} title="Reporte de productos" />
             </div>
           </div>
-          
+
         </div>
       </div>
     </div>
   );
 };
 
-// Componente para botones rojos grandes
-const ActionButton = ({ color, icon, title, subtitle }) => (
-  <button className={`${color} text-white rounded-xl shadow-lg shadow-red-100 hover:shadow-xl transform transition-all duration-200 hover:-translate-y-1 p-6 flex flex-col items-center justify-center gap-3 h-32 w-full`}>
-    <div className="opacity-90">{icon}</div>
-    <div className="text-center">
-      <span className="block font-semibold text-sm">{title}</span>
-      {subtitle && <span className="block text-xs opacity-80 font-light mt-1">{subtitle}</span>}
-    </div>
+// Componente Tarjeta Grande (Rojo)
+const BigCard = ({ color, icon, title, subtitle }) => (
+  <button className={`${color} text-white p-6 rounded-lg shadow-lg shadow-red-100 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center gap-2 h-32 w-full`}>
+    <div className="opacity-90 mb-1">{icon}</div>
+    <span className="font-bold text-sm block">{title}</span>
+    {subtitle && <span className="text-xs opacity-80 font-light">{subtitle}</span>}
   </button>
 );
 
-// Componente para botones verdes pequeños
-const ReportButton = ({ color, icon, text }) => (
-  <button className={`${color} text-white rounded-lg shadow-md shadow-green-100 hover:shadow-lg transform transition-all duration-200 hover:-translate-y-1 p-4 flex flex-col items-center justify-center gap-2 h-24 w-full`}>
+// Componente Tarjeta Pequeña (Verde)
+const SmallCard = ({ color, icon, title }) => (
+  <button className={`${color} text-white p-4 rounded-lg shadow-lg shadow-green-100 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center gap-2 h-24 w-full`}>
     <div className="opacity-90">{icon}</div>
-    <span className="text-xs font-semibold text-center">{text}</span>
+    <span className="font-semibold text-xs text-center leading-tight">{title}</span>
   </button>
 );
 

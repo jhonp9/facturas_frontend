@@ -1,13 +1,13 @@
+@import "tailwindcss"; 
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body {
-  font-family: 'Poppins', sans-serif; /* Fuente más parecida a la imagen */
-  background-color: #f4f6f9; /* Fondo gris claro típico de dashboards */
-  color: #333;
+/* Reglas base */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: #f9fafb;
 }
 
 /* Scrollbar fina para el menú */
