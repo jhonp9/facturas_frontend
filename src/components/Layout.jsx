@@ -8,13 +8,15 @@ import {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const Layout = ({ children, user }) => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/login');
+    
+    // CAMBIO AQUÍ: Usamos window.location.href en lugar de navigate
+    // Esto fuerza la recarga de la página, haciendo que App.jsx lea de nuevo que ya no hay usuario.
+    window.location.href = '/login'; 
   };
 
   const menuItems = [
@@ -37,7 +39,8 @@ const Layout = ({ children, user }) => {
         <div className="h-24 flex items-center justify-center border-b border-gray-100 p-4">
           {user?.logo ? (
             <img 
-              src={`${API_URL}/uploads/${user.logo}`} 
+              /* Si empieza con http usamos la url directa, si no (para compatibilidad vieja) concatenamos */
+              src={user.logo.startsWith('http') ? user.logo : `${API_URL}/uploads/${user.logo}`} 
               alt="Logo Empresa" 
               className="h-16 object-contain"
             />
@@ -76,7 +79,7 @@ const Layout = ({ children, user }) => {
 
         <div className="p-4 border-t border-gray-100">
           <button onClick={handleLogout} className="flex items-center gap-3 text-red-500 hover:bg-red-50 px-4 py-3 rounded-lg w-full transition-colors font-medium">
-            <LogOut size={20} /> Cerrar Sesión
+            <LogOut size={20} />Cerrar Sesión
           </button>
         </div>
       </aside>

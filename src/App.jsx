@@ -1,9 +1,9 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Layout from './components/Layout'; // El que creamos en la respuesta anterior
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   // Simulamos estado de usuario logueado (esto luego vendrá de un Contexto o localStorage)
@@ -15,7 +15,9 @@ function App() {
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
         
-        {/* Rutas protegidas */}
+        {/* NUEVA RUTA */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        
         <Route path="/" element={user ? <Layout user={user}><Dashboard /></Layout> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
