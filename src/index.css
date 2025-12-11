@@ -1,46 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Configuración base para toda la app */
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f3f4f6; /* Un gris muy suave para el fondo general */
-  color: #1f2937; /* Gris oscuro para texto (mejor que negro puro) */
+  font-family: 'Poppins', sans-serif; /* Fuente más parecida a la imagen */
+  background-color: #f4f6f9; /* Fondo gris claro típico de dashboards */
+  color: #333;
 }
 
-/* Scrollbar personalizada (opcional, para que se vea más limpio) */
+/* Scrollbar fina para el menú */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1; 
+  background: transparent; 
 }
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1; 
-  border-radius: 4px;
+  background: #cbd5e1; 
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8; 
-}
-
-/* Animaciones Personalizadas */
-@layer utilities {
-  .animate-fade-in-up {
-    animation: fadeInUp 0.3s ease-out forwards;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
+  background: #94a3b8; 
 }

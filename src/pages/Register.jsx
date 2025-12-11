@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Upload, Mail, Lock, Building, User } from 'lucide-react';
+import { Upload, Mail, Building, User, Lock, ArrowRight } from 'lucide-react';
 import api from '../api/axios';
 import VerificationModal from '../components/VerificationModal';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: Formulario, 2: Modal Verificación
+  const [step, setStep] = useState(1);
   const [empresaId, setEmpresaId] = useState(null);
   
   const [formData, setFormData] = useState({
@@ -20,12 +20,8 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Manejar cambios en inputs de texto
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Manejar subida de logo con previsualización
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -34,14 +30,12 @@ const Register = () => {
     }
   };
 
-  // Enviar formulario al Backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      // Usamos FormData porque enviamos un archivo (imagen)
       const data = new FormData();
       data.append('nombreUsuario', formData.nombreUsuario);
       data.append('emailContacto', formData.emailContacto);
@@ -49,121 +43,68 @@ const Register = () => {
       data.append('passwordVendedor', formData.passwordVendedor);
       data.append('logo', logoFile);
 
-      // Ajusta la URL a tu backend (ej: http://localhost:3000/api/auth/register)
       const response = await api.post('/api/auth/register', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       setEmpresaId(response.data.empresaId);
-      setStep(2); // Abrir modal de verificación
-
+      setStep(2);
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al registrar');
+      setError(err.response?.data?.error || 'Error al registrar. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-200">
         
         {step === 1 && (
           <>
             <div className="text-center">
-              <h2 className="mt-2 text-3xl font-extrabold text-gray-900">Registra tu Negocio</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Configura tu cuenta administradora y de vendedor
-              </p>
+              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Crea tu cuenta</h2>
+              <p className="mt-2 text-sm text-gray-500">Configura tu negocio en minutos</p>
             </div>
 
-            {error && <div className="bg-red-100 text-red-700 p-3 rounded text-sm text-center">{error}</div>}
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-200">
+                {error}
+              </div>
+            )}
 
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-              {/* LOGO UPLOAD */}
-              <div className="flex flex-col items-center justify-center">
-                <label className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:border-blue-500 transition-colors bg-gray-50 overflow-hidden relative">
+              
+              {/* LOGO UPLOAD CIRCULAR */}
+              <div className="flex flex-col items-center">
+                <label className={`w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-full cursor-pointer transition-all relative overflow-hidden group ${previewUrl ? 'border-blue-500' : 'border-gray-300 hover:border-blue-400'}`}>
                   {previewUrl ? (
-                    <img src={previewUrl} alt="Logo Preview" className="w-full h-full object-cover" />
+                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <>
-                      <Upload className="text-gray-400 mb-2" />
-                      <span className="text-xs text-gray-500">Subir Logo</span>
-                    </>
+                    <div className="text-center p-2">
+                      <Upload className="mx-auto h-8 w-8 text-gray-400 group-hover:text-blue-500" />
+                      <span className="text-[10px] text-gray-500 font-medium mt-1 block">Subir Logo *</span>
+                    </div>
                   )}
                   <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} required />
                 </label>
-                <p className="text-xs text-gray-400 mt-2">Obligatorio para facturas</p>
               </div>
 
-              <div className="rounded-md shadow-sm space-y-4">
-                {/* Nombre Usuario / Empresa */}
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Building className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    name="nombreUsuario"
-                    type="text"
-                    required
-                    className="pl-10 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2 border"
-                    placeholder="Nombre Usuario (Único)"
-                    value={formData.nombreUsuario}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                {/* Email de Contacto */}
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    name="emailContacto"
-                    type="email"
-                    required
-                    className="pl-10 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2 border"
-                    placeholder="Correo de contacto (Gmail/Hotmail)"
-                    value={formData.emailContacto}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Contraseñas de acceso:</p>
+              <div className="space-y-4">
+                <InputGroup icon={<Building />} name="nombreUsuario" placeholder="Nombre de Empresa (Único)" value={formData.nombreUsuario} onChange={handleChange} />
+                <InputGroup icon={<Mail />} name="emailContacto" type="email" placeholder="Correo Personal (Gmail/Hotmail)" value={formData.emailContacto} onChange={handleChange} />
+                
+                <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-100">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Seguridad de Cuentas</p>
                   
-                  {/* Password Admin */}
-                  <div className="relative mb-3">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-red-400" />
-                    </div>
-                    <input
-                      name="passwordAdmin"
-                      type="password"
-                      required
-                      className="pl-10 block w-full border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 p-2 border"
-                      placeholder="Contraseña para Administrador"
-                      value={formData.passwordAdmin}
-                      onChange={handleChange}
-                    />
-                    <p className="text-xs text-gray-400 mt-1 pl-1">Usuario será: administrador@{formData.nombreUsuario || '...'}.com</p>
+                  <div>
+                    <InputGroup icon={<Lock className="text-red-400"/>} name="passwordAdmin" type="password" placeholder="Contraseña Administrador" value={formData.passwordAdmin} onChange={handleChange} />
+                    <p className="text-[10px] text-gray-400 mt-1 pl-2">Usuario: admin@{formData.nombreUsuario || '...'}.com</p>
                   </div>
 
-                  {/* Password Vendedor */}
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-green-400" />
-                    </div>
-                    <input
-                      name="passwordVendedor"
-                      type="password"
-                      required
-                      className="pl-10 block w-full border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 p-2 border"
-                      placeholder="Contraseña para Vendedor"
-                      value={formData.passwordVendedor}
-                      onChange={handleChange}
-                    />
-                    <p className="text-xs text-gray-400 mt-1 pl-1">Usuario será: vendedor@{formData.nombreUsuario || '...'}.com</p>
+                  <div>
+                    <InputGroup icon={<Lock className="text-green-400"/>} name="passwordVendedor" type="password" placeholder="Contraseña Vendedor" value={formData.passwordVendedor} onChange={handleChange} />
+                    <p className="text-[10px] text-gray-400 mt-1 pl-2">Usuario: vendedor@{formData.nombreUsuario || '...'}.com</p>
                   </div>
                 </div>
               </div>
@@ -171,23 +112,24 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/30 transition-all"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg shadow-blue-500/30 transition-all"
               >
                 {loading ? 'Procesando...' : 'Registrar y Enviar Código'}
+                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
               </button>
             </form>
-            <div className="text-center mt-4">
-               <Link to="/login" className="text-sm text-blue-600 hover:underline">¿Ya tienes cuenta? Inicia sesión</Link>
-            </div>
+            
+            <p className="text-center text-sm text-gray-600">
+              ¿Ya tienes cuenta? <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">Inicia Sesión</Link>
+            </p>
           </>
         )}
 
-        {/* MODAL DE VERIFICACIÓN */}
         {step === 2 && (
           <VerificationModal 
             empresaId={empresaId} 
             email={formData.emailContacto}
-            onSuccess={() => navigate('/login')} // Si valida ok, va al login
+            onSuccess={() => navigate('/login')} 
             onCancel={() => setStep(1)}
           />
         )}
@@ -195,5 +137,19 @@ const Register = () => {
     </div>
   );
 };
+
+// Componente auxiliar para inputs
+const InputGroup = ({ icon, ...props }) => (
+  <div className="relative">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+      {React.cloneElement(icon, { size: 18 })}
+    </div>
+    <input
+      required
+      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow"
+      {...props}
+    />
+  </div>
+);
 
 export default Register;
