@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileText, FilePlus, Receipt, PieChart, DollarSign, ShoppingCart, Package } from 'lucide-react';
 
 const Dashboard = () => {
@@ -27,7 +26,7 @@ const Dashboard = () => {
           </div>
 
           {/* ESPACIO VACÍO PARA BALANCE VISUAL (O GRÁFICOS FUTUROS) */}
-          <div className="flex-grow border-t border-dashed border-gray-200 my-4"></div>
+          <div className="flex-grow:1 border-t border-dashed border-gray-200 my-4"></div>
 
           {/* SECCIÓN REPORTES (VERDE) */}
           <div className="space-y-3">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Upload, Mail, Building, User, Lock, ArrowRight } from 'lucide-react';
+import { Upload, Mail, Building, Lock, Search, Phone, Plus, Trash2, MapPin } from 'lucide-react';
 import api from '../api/axios';
 import VerificationModal from '../components/VerificationModal';
 
@@ -8,19 +8,66 @@ const Register = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [empresaId, setEmpresaId] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    nombreUsuario: '',
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [loadingRegister, setLoadingRegister] = useState(false);
+  const [error, setError] = useState('');
+
+  // Estado del formulario
+  const [ruc, setRuc] = useState('');
+  const [datosEmpresa, setDatosEmpresa] = useState({
+    nombreUsuario: '', // <--- NUEVO
+    razonSocial: '',
+    direccion: '',
     emailContacto: '',
     passwordAdmin: '',
     passwordVendedor: ''
   });
+  
+  // Manejo de teléfonos múltiples
+  const [telefonos, setTelefonos] = useState(['']); // Empieza con 1 vacío
+
   const [logoFile, setLogoFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // 1. Buscar RUC
+  const handleSearchRUC = async () => {
+    if (ruc.length !== 11) {
+      setError('El RUC debe tener 11 dígitos');
+      return;
+    }
+    setLoadingSearch(true);
+    setError('');
+    try {
+      // Llamada a nuestro backend
+      const res = await api.post('/api/auth/search-ruc', { ruc });
+      const data = res.data;
+      
+      // Rellenar datos automáticamente
+      setDatosEmpresa(prev => ({
+        ...prev,
+        razonSocial: data.razonSocial || data.nombre || '', // Depende de la API
+        direccion: data.direccion || data.direccionCompleta || '',
+      }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'No se pudo obtener datos del RUC.');
+      // Permitimos que el usuario escriba manualmente si falla la API
+    } finally {
+      setLoadingSearch(false);
+    }
+  };
+
+  // Manejadores de Inputs
+  const handleChange = (e) => {
+    // Si escribe en nombreUsuario, forzamos minúsculas y sin espacios
+    if (e.target.name === 'nombreUsuario') {
+        setDatosEmpresa({ 
+            ...datosEmpresa, 
+            [e.target.name]: e.target.value.toLowerCase().replace(/\s+/g, '') 
+        });
+    } else {
+        setDatosEmpresa({ ...datosEmpresa, [e.target.name]: e.target.value });
+    }
+  };
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -30,105 +77,214 @@ const Register = () => {
     }
   };
 
+  // Manejadores de Teléfonos
+  const handlePhoneChange = (index, value) => {
+    const newPhones = [...telefonos];
+    newPhones[index] = value;
+    setTelefonos(newPhones);
+  };
+
+  const addPhoneField = () => setTelefonos([...telefonos, '']);
+  
+  const removePhoneField = (index) => {
+    const newPhones = telefonos.filter((_, i) => i !== index);
+    setTelefonos(newPhones);
+  };
+
+  // 2. Enviar Registro
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setLoadingRegister(true);
 
     try {
       const data = new FormData();
-      data.append('nombreUsuario', formData.nombreUsuario);
-      data.append('emailContacto', formData.emailContacto);
-      data.append('passwordAdmin', formData.passwordAdmin);
-      data.append('passwordVendedor', formData.passwordVendedor);
+      data.append('ruc', ruc);
+      data.append('nombreUsuario', datosEmpresa.nombreUsuario);
+      data.append('razonSocial', datosEmpresa.razonSocial);
+      data.append('direccion', datosEmpresa.direccion);
+      data.append('emailContacto', datosEmpresa.emailContacto);
+      data.append('passwordAdmin', datosEmpresa.passwordAdmin);
+      data.append('passwordVendedor', datosEmpresa.passwordVendedor);
       data.append('logo', logoFile);
+      
+      // Enviamos teléfonos como string JSON
+      // Filtramos vacíos
+      const validPhones = telefonos.filter(t => t.trim() !== '');
+      data.append('telefonos', JSON.stringify(validPhones));
 
       const response = await api.post('/api/auth/register', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       setEmpresaId(response.data.empresaId);
-      setStep(2);
+      setStep(2); // Pasar a modal de verificación
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al registrar. Inténtalo de nuevo.');
+      setError(err.response?.data?.error || 'Error al registrar.');
     } finally {
-      setLoading(false);
+      setLoadingRegister(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-200">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-200">
         
         {step === 1 && (
           <>
             <div className="text-center">
-              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Crea tu cuenta</h2>
-              <p className="mt-2 text-sm text-gray-500">Configura tu negocio en minutos</p>
+              <h2 className="text-3xl font-extrabold text-slate-800">Registra tu Negocio</h2>
+              <p className="mt-2 text-sm text-gray-500">Facturación Electrónica al instante</p>
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-200">
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-200 animate-pulse">
                 {error}
               </div>
             )}
 
-            <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-6 mt-8">
               
-              {/* LOGO UPLOAD CIRCULAR */}
-              <div className="flex flex-col items-center">
-                <label className={`w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-full cursor-pointer transition-all relative overflow-hidden group ${previewUrl ? 'border-blue-500' : 'border-gray-300 hover:border-blue-400'}`}>
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center p-2">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400 group-hover:text-blue-500" />
-                      <span className="text-[10px] text-gray-500 font-medium mt-1 block">Subir Logo *</span>
-                    </div>
-                  )}
-                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} required />
-                </label>
+              {/* BUSCADOR DE RUC */}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">RUC *</label>
+                  <input
+                    type="text"
+                    maxLength="11"
+                    className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="20123456789"
+                    value={ruc}
+                    onChange={(e) => setRuc(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSearchRUC}
+                  disabled={loadingSearch || ruc.length !== 11}
+                  className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 h-50px w-50px flex items-center justify-center"
+                  title="Buscar datos en SUNAT"
+                >
+                  {loadingSearch ? <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"/> : <Search size={24} />}
+                </button>
               </div>
 
-              <div className="space-y-4">
-                <InputGroup icon={<Building />} name="nombreUsuario" placeholder="Nombre de Empresa (Único)" value={formData.nombreUsuario} onChange={handleChange} />
-                <InputGroup icon={<Mail />} name="emailContacto" type="email" placeholder="Correo Personal (Gmail/Hotmail)" value={formData.emailContacto} onChange={handleChange} />
+              {/* FORMULARIO PRINCIPAL */}
+              <form onSubmit={handleSubmit} className="space-y-5">
                 
-                <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-100">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Seguridad de Cuentas</p>
-                  
+                {/* DATOS AUTOMÁTICOS */}
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-3">
+                  <InputGroup 
+                    icon={<Building />} 
+                    label="Razón Social / Nombre"
+                    name="razonSocial" 
+                    value={datosEmpresa.razonSocial} 
+                    onChange={handleChange} 
+                    placeholder="Se llenará automáticamente..."
+                    readOnly={!datosEmpresa.razonSocial} // Editable solo si falla la API
+                  />
+                  <InputGroup 
+                    icon={<MapPin />} 
+                    label="Dirección Fiscal"
+                    name="direccion" 
+                    value={datosEmpresa.direccion} 
+                    onChange={handleChange} 
+                    placeholder="Dirección fiscal..."
+                  />
+                  {/* --- CAMPO NOMBRE DE USUARIO --- */}
                   <div>
-                    <InputGroup icon={<Lock className="text-red-400"/>} name="passwordAdmin" type="password" placeholder="Contraseña Administrador" value={formData.passwordAdmin} onChange={handleChange} />
-                    <p className="text-[10px] text-gray-400 mt-1 pl-2">Usuario: admin@{formData.nombreUsuario || '...'}.com</p>
-                  </div>
-
-                  <div>
-                    <InputGroup icon={<Lock className="text-green-400"/>} name="passwordVendedor" type="password" placeholder="Contraseña Vendedor" value={formData.passwordVendedor} onChange={handleChange} />
-                    <p className="text-[10px] text-gray-400 mt-1 pl-2">Usuario: vendedor@{formData.nombreUsuario || '...'}.com</p>
+                    <InputGroup 
+                        icon={<Building className="text-blue-600" />} 
+                        label="Nombre de Usuario Único"
+                        name="nombreUsuario" 
+                        value={datosEmpresa.nombreUsuario} 
+                        onChange={handleChange} 
+                        placeholder="ej: miempresa2024"
+                        required
+                    />
+                    {datosEmpresa.nombreUsuario && (
+                        <p className="text-[11px] text-blue-600 mt-1 pl-2 font-medium">
+                           Tus usuarios serán: <br/>
+                           • administrador@{datosEmpresa.nombreUsuario}.com <br/>
+                           • vendedor@{datosEmpresa.nombreUsuario}.com
+                        </p>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg shadow-blue-500/30 transition-all"
-              >
-                {loading ? 'Procesando...' : 'Registrar y Enviar Código'}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </button>
-            </form>
-            
-            <p className="text-center text-sm text-gray-600">
-              ¿Ya tienes cuenta? <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">Inicia Sesión</Link>
-            </p>
+                {/* LOGO */}
+                <div className="flex items-center gap-4 border border-dashed border-gray-300 p-4 rounded-xl hover:border-blue-400 transition-colors bg-gray-50">
+                  <div className="h-16 w-16 bg-white border border-gray-200 rounded-full flex items-center justify-center overflow-hidden shrink-0">
+                    {previewUrl ? <img src={previewUrl} className="h-full w-full object-cover" /> : <Upload className="text-gray-400" />}
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 cursor-pointer">
+                      <span className="bg-white px-3 py-1 border border-gray-300 rounded text-xs font-bold hover:bg-gray-50">Seleccionar Logo</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} required />
+                    </label>
+                    <p className="text-xs text-gray-400">Formato: PNG, JPG (Max 5MB)</p>
+                  </div>
+                </div>
+
+                {/* CONTACTO & SEGURIDAD */}
+                <div className="space-y-3">
+                  <InputGroup icon={<Mail />} label="Email de Contacto (Dueño)" name="emailContacto" type="email" value={datosEmpresa.emailContacto} onChange={handleChange} placeholder="correo@gmail.com" />
+                  
+                  {/* TELEFONOS DINAMICOS */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfonos de Contacto</label>
+                    {telefonos.map((tel, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <div className="relative flex-1">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <Phone size={18} />
+                          </div>
+                          <input
+                            type="tel"
+                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="999 999 999"
+                            value={tel}
+                            onChange={(e) => handlePhoneChange(index, e.target.value)}
+                          />
+                        </div>
+                        {telefonos.length > 1 && (
+                          <button type="button" onClick={() => removePhoneField(index)} className="text-red-400 hover:text-red-600 p-2">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" onClick={addPhoneField} className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline mt-1">
+                      <Plus size={14} /> Agregar otro teléfono
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <InputGroup icon={<Lock className="text-red-400"/>} label="Clave Admin" name="passwordAdmin" type="password" value={datosEmpresa.passwordAdmin} onChange={handleChange} placeholder="******" />
+                    <InputGroup icon={<Lock className="text-green-400"/>} label="Clave Vendedor" name="passwordVendedor" type="password" value={datosEmpresa.passwordVendedor} onChange={handleChange} placeholder="******" />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loadingRegister}
+                  className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1"
+                >
+                  {loadingRegister ? 'Procesando...' : 'Crear Cuenta'}
+                </button>
+              </form>
+              
+              <div className="text-center">
+                <Link to="/login" className="text-sm text-gray-600 hover:text-blue-600 font-medium">¿Ya tienes cuenta? Inicia Sesión</Link>
+              </div>
+            </div>
           </>
         )}
 
         {step === 2 && (
           <VerificationModal 
             empresaId={empresaId} 
-            email={formData.emailContacto}
+            email={datosEmpresa.emailContacto}
             onSuccess={() => navigate('/login')} 
             onCancel={() => setStep(1)}
           />
@@ -138,17 +294,20 @@ const Register = () => {
   );
 };
 
-// Componente auxiliar para inputs
-const InputGroup = ({ icon, ...props }) => (
-  <div className="relative">
-    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-      {React.cloneElement(icon, { size: 18 })}
+// Componente auxiliar mejorado con Label
+const InputGroup = ({ icon, label, ...props }) => (
+  <div>
+    {label && <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{label}</label>}
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+        {React.cloneElement(icon, { size: 18 })}
+      </div>
+      <input
+        required
+        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-all read-only:bg-gray-100 read-only:text-gray-500"
+        {...props}
+      />
     </div>
-    <input
-      required
-      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow"
-      {...props}
-    />
   </div>
 );
 
